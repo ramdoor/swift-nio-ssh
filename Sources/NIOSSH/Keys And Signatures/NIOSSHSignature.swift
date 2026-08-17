@@ -235,7 +235,8 @@ extension ByteBuffer {
                 return try buffer.readECDSAP521Signature()
             } else {
                 for signature in NIOSSHPublicKey.customSignatures {
-                    if bytesView.elementsEqual(signature.signaturePrefix.utf8) {
+                    if bytesView.elementsEqual(signature.signaturePrefix.utf8)
+                        || signature.signaturePrefixAliases.contains(where: { bytesView.elementsEqual($0.utf8) }) {
                         let signature = try signature.read(from: &buffer)
                         return NIOSSHSignature(backingSignature: .custom(signature))
                     }

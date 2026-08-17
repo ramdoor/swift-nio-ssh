@@ -204,7 +204,7 @@ extension NIOSSHPublicKey {
     ]
 
     static var knownAlgorithms: [String.UTF8View] {
-        bundledAlgorithms + customPublicKeyAlgorithms.map { $0.publicKeyPrefix.utf8 }
+        bundledAlgorithms + customPublicKeyAlgorithms.flatMap { [$0.publicKeyPrefix.utf8] + $0.publicKeyPrefixAliases.map { $0.utf8 } }
     }
 
     static var customPublicKeyAlgorithms: [NIOSSHPublicKeyProtocol.Type] {
@@ -454,7 +454,8 @@ extension ByteBuffer {
                 return try buffer.readECDSAP521PublicKey()
             } else {
                 for type in NIOSSHPublicKey.customPublicKeyAlgorithms {
-                    if keyIdentifierBytes.elementsEqual(type.publicKeyPrefix.utf8) {
+                    if keyIdentifierBytes.elementsEqual(type.publicKeyPrefix.utf8)
+                        || type.publicKeyPrefixAliases.contains(where: { keyIdentifierBytes.elementsEqual($0.utf8) }) {
                         let publicKey = try type.read(from: &buffer)
                         return NIOSSHPublicKey(backingKey: .custom(publicKey))
                     }

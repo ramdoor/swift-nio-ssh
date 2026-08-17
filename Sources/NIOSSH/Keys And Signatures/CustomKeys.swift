@@ -26,6 +26,9 @@ public protocol NIOSSHSignatureProtocol {
     /// The returned value MUST NOT overlap with other signature implementations or a specifications that the signature does not implement.
     static var signaturePrefix: String { get }
 
+    /// Alternative wire identifiers accepted for this signature type when parsing.
+    static var signaturePrefixAliases: [String] { get }
+
     /// The raw reprentation of this signature as a blob.
     var rawRepresentation: Data { get }
 
@@ -43,11 +46,19 @@ internal extension NIOSSHSignatureProtocol {
     }
 }
 
+public extension NIOSSHSignatureProtocol {
+    static var signaturePrefixAliases: [String] { [] }
+}
+
 public protocol NIOSSHPublicKeyProtocol {
     /// An identifier that represents the type of public key used in an SSH packet.
     /// This identifier MUST be unique to the public key implementation.
     /// The returned value MUST NOT overlap with other public key implementations or a specifications that the public key does not implement.
     static var publicKeyPrefix: String { get }
+
+    /// Alternative wire identifiers accepted for this key type when parsing.
+    /// RFC 8332: rsa-sha2-256/512 public key blobs keep the "ssh-rsa" name.
+    static var publicKeyPrefixAliases: [String] { get }
 
     /// The raw reprentation of this publc key as a blob.
     var rawRepresentation: Data { get }
@@ -67,6 +78,10 @@ internal extension NIOSSHPublicKeyProtocol {
     var publicKeyPrefix: String {
         Self.publicKeyPrefix
     }
+}
+
+public extension NIOSSHPublicKeyProtocol {
+    static var publicKeyPrefixAliases: [String] { [] }
 }
 
 public protocol NIOSSHPrivateKeyProtocol {
