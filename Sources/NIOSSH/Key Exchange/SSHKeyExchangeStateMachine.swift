@@ -251,7 +251,20 @@ struct SSHKeyExchangeStateMachine {
         case .keyExchangeInitSent(exchange: var exchanger, negotiated: let negotiated):
             switch self.role {
             case .client:
-                guard message.hostKey.keyPrefix.elementsEqual(negotiated.negotiatedHostKeyAlgorithm.utf8) else {
+                // RFC 8332: the host key blob may use an alias of the negotiated
+                // algorithm (blob "ssh-rsa" while negotiating rsa-sha2-256).
+                var acceptableHostKey = message.hostKey.keyPrefix.elementsEqual(negotiated.negotiatedHostKeyAlgorithm.utf8)
+                if !acceptableHostKey {
+                    for type in NIOSSHPublicKey.customPublicKeyAlgorithms {
+                        let names = [type.publicKeyPrefix] + type.publicKeyPrefixAliases
+                        if names.contains(String(negotiated.negotiatedHostKeyAlgorithm)),
+                           names.contains(where: { message.hostKey.keyPrefix.elementsEqual($0.utf8) }) {
+                            acceptableHostKey = true
+                            break
+                        }
+                    }
+                }
+                guard acceptableHostKey else {
                     throw NIOSSHError.invalidHostKeyForKeyExchange(expected: negotiated.negotiatedHostKeyAlgorithm,
                                                                    got: message.hostKey.keyPrefix)
                 }
