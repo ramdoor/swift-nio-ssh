@@ -456,7 +456,8 @@ extension ByteBuffer {
                 for type in NIOSSHPublicKey.customPublicKeyAlgorithms {
                     if keyIdentifierBytes.elementsEqual(type.publicKeyPrefix.utf8)
                         || type.publicKeyPrefixAliases.contains(where: { keyIdentifierBytes.elementsEqual($0.utf8) }) {
-                        let publicKey = try type.read(from: &buffer)
+                        let wireName = String(decoding: Array(keyIdentifierBytes), as: UTF8.self)
+                        let publicKey = try type.read(from: &buffer, wireName: wireName)
                         return NIOSSHPublicKey(backingKey: .custom(publicKey))
                     }
                 }

@@ -72,16 +72,28 @@ public protocol NIOSSHPublicKeyProtocol {
 
     /// Reads this Public Key from the buffer using the same format implemented in `write(to:)`
     static func read(from buffer: inout ByteBuffer) throws -> Self
-}
 
-internal extension NIOSSHPublicKeyProtocol {
-    var publicKeyPrefix: String {
-        Self.publicKeyPrefix
-    }
+    /// Reads this Public Key noting the exact wire identifier it was parsed with
+    /// (may be an alias, e.g. "ssh-rsa" for rsa-sha2-256 — RFC 8332). The
+    /// identifier an instance reports back via `publicKeyPrefix` must round-trip,
+    /// because the key-exchange hash covers the server's original bytes.
+    static func read(from buffer: inout ByteBuffer, wireName: String) throws -> Self
+
+    /// The wire identifier used when serializing this specific key instance.
+    /// Defaults to `Self.publicKeyPrefix`.
+    var publicKeyPrefix: String { get }
 }
 
 public extension NIOSSHPublicKeyProtocol {
     static var publicKeyPrefixAliases: [String] { [] }
+
+    static func read(from buffer: inout ByteBuffer, wireName: String) throws -> Self {
+        try read(from: &buffer)
+    }
+
+    var publicKeyPrefix: String {
+        Self.publicKeyPrefix
+    }
 }
 
 public protocol NIOSSHPrivateKeyProtocol {
