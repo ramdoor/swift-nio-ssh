@@ -554,8 +554,12 @@ extension SSHKeyExchangeStateMachine {
 
     static var supportedServerHostKeyAlgorithms: [Substring] {
         let bundledAlgorithms = bundledServerHostKeyAlgorithms
-        let customAlgorithms = NIOSSHPublicKey.customPublicKeyAlgorithms.flatMap {
-            [Substring($0.publicKeyPrefix)] + $0.publicKeyPrefixAliases.map(Substring.init)
+        let customAlgorithms = NIOSSHPublicKey.customPublicKeyAlgorithms.flatMap { type -> [Substring] in
+            var names: [Substring] = [Substring(type.publicKeyPrefix)]
+            for alias in type.publicKeyPrefixAliases {
+                names.append(Substring(alias))
+            }
+            return names
         }
 
         return bundledAlgorithms + customAlgorithms
