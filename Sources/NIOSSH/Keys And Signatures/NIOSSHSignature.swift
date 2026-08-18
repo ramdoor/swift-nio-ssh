@@ -237,7 +237,8 @@ extension ByteBuffer {
                 for signature in NIOSSHPublicKey.customSignatures {
                     if bytesView.elementsEqual(signature.signaturePrefix.utf8)
                         || signature.signaturePrefixAliases.contains(where: { bytesView.elementsEqual($0.utf8) }) {
-                        let signature = try signature.read(from: &buffer)
+                        let wireName = String(decoding: Array(bytesView), as: UTF8.self)
+                        let signature = try signature.read(from: &buffer, wireName: wireName)
                         return NIOSSHSignature(backingSignature: .custom(signature))
                     }
                 }

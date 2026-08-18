@@ -691,7 +691,22 @@ extension ByteBuffer {
                         return nil
                     }
 
-                    guard algorithmName.readableBytesView.elementsEqual(publicKey.keyPrefix) else {
+                    // RFC 8332: a conforming client sends algorithm
+                    // "rsa-sha2-256" with a key blob still named "ssh-rsa".
+                    // Accept when both names belong to the same registered
+                    // prefix+aliases equivalence class.
+                    var algorithmMatchesKey = algorithmName.readableBytesView.elementsEqual(publicKey.keyPrefix)
+                    if !algorithmMatchesKey {
+                        for type in NIOSSHPublicKey.customPublicKeyAlgorithms {
+                            let names = [type.publicKeyPrefix] + type.publicKeyPrefixAliases
+                            if names.contains(where: { algorithmName.readableBytesView.elementsEqual($0.utf8) }),
+                               names.contains(where: { publicKey.keyPrefix.elementsEqual($0.utf8) }) {
+                                algorithmMatchesKey = true
+                                break
+                            }
+                        }
+                    }
+                    guard algorithmMatchesKey else {
                         throw NIOSSHError.invalidSSHMessage(reason: "algorithm and key mismatch in user auth request")
                     }
 

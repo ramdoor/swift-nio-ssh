@@ -29,6 +29,10 @@ public protocol NIOSSHSignatureProtocol {
     /// Alternative wire identifiers accepted for this signature type when parsing.
     static var signaturePrefixAliases: [String] { get }
 
+    /// Reads this signature noting the exact wire identifier it was parsed with,
+    /// so the verifier can bind the hash algorithm to the declared name (RFC 8332).
+    static func read(from buffer: inout ByteBuffer, wireName: String) throws -> Self
+
     /// The raw reprentation of this signature as a blob.
     var rawRepresentation: Data { get }
 
@@ -48,6 +52,10 @@ internal extension NIOSSHSignatureProtocol {
 
 public extension NIOSSHSignatureProtocol {
     static var signaturePrefixAliases: [String] { [] }
+
+    static func read(from buffer: inout ByteBuffer, wireName: String) throws -> Self {
+        try read(from: &buffer)
+    }
 }
 
 public protocol NIOSSHPublicKeyProtocol {

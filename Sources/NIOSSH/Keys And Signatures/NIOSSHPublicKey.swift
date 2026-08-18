@@ -306,8 +306,11 @@ extension NIOSSHPublicKey.BackingKey: Equatable {
         case (.ecdsaP521(let lhs), .ecdsaP521(let rhs)):
             return lhs.rawRepresentation == rhs.rawRepresentation
         case (.custom(let lhs), .custom(let rhs)):
+            // Canonical identity: static algorithm prefix + key bytes. The
+            // instance prefix is a serialization detail (RFC 8332 aliases) and
+            // must not make identical keys compare unequal.
             return
-                lhs.publicKeyPrefix == rhs.publicKeyPrefix &&
+                type(of: lhs).publicKeyPrefix == type(of: rhs).publicKeyPrefix &&
                 lhs.rawRepresentation == rhs.rawRepresentation
         case (.certified(let lhs), .certified(let rhs)):
             return lhs == rhs
@@ -339,7 +342,7 @@ extension NIOSSHPublicKey.BackingKey: Hashable {
             hasher.combine(pkey.rawRepresentation)
         case .custom(let pkey):
             hasher.combine(5)
-            hasher.combine(pkey.publicKeyPrefix)
+            hasher.combine(type(of: pkey).publicKeyPrefix)
             hasher.combine(pkey.rawRepresentation)
         case .certified(let pkey):
             hasher.combine(6)
